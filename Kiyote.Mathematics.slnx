@@ -1,0 +1,25 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path=".runsettings" />
+    <File Path="BENCHMARK.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="LICENSE" />
+    <File Path="nuget.config" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Kiyote/" />
+  <Folder Name="/src/Kiyote/Mathematics/">
+    <Project Path="src/Kiyote/Mathematics/Kiyote.Mathematics/Kiyote.Mathematics.csproj" />
+  </Folder>
+  <Folder Name="/test/" />
+  <Folder Name="/test/Kiyote/" />
+  <Folder Name="/test/Kiyote/Mathematics/">
+    <Project Path="test/Kiyote/Mathematics/Kiyote.Mathematics.Benchmarks/Kiyote.Mathematics.Benchmarks.csproj" Id="60f7bb82-fb01-4deb-90b5-db59b674a7e9" />
+    <Project Path="test/Kiyote/Mathematics/Kiyote.Mathematics.IntegrationTests/Kiyote.Mathematics.IntegrationTests.csproj" Id="134a145a-779d-49b5-8058-621fa2b79481" />
+    <Project Path="test/Kiyote/Mathematics/Kiyote.Mathematics.UnitTests/Kiyote.Mathematics.UnitTests.csproj" Id="1c0f49d7-6222-4995-9f38-70927cea9d1d" />
+    <Project Path="test/Kiyote/Mathematics/Kiyote.Mathematics.Visualizer/Kiyote.Mathematics.Visualizer.csproj" Id="7d4cf68a-5257-49a3-9c06-2b892b67a7d2" />
+  </Folder>
+</Solution>
