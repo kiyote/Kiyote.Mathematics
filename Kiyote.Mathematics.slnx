@@ -9,6 +9,14 @@
     <File Path="LICENSE" />
     <File Path="nuget.config" />
   </Folder>
+  <Folder Name="/Solution Items/.github/">
+    <File Path=".github/copilot-instructions.md" />
+    <File Path=".github/dependabot.yaml" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/workflows/">
+    <File Path=".github/workflows/ci.yml" />
+    <File Path=".github/workflows/release.yml" />
+  </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/Kiyote/" />
   <Folder Name="/src/Kiyote/Mathematics/">
