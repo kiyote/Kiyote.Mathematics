@@ -4,6 +4,7 @@
     <File Path=".gitignore" />
     <File Path=".runsettings" />
     <File Path="BENCHMARK.md" />
+    <File Path="CODEOWNERS" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="LICENSE" />
