@@ -1,3 +1,4 @@
+using System.Buffers;
 using Kiyote.Geometry;
 
 namespace Kiyote.Mathematics.Randomization;
@@ -65,96 +66,107 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		int distanceApart,
 		bool clipToBounds
 	) {
-		List<Point> result = [];
-
 		int radius2 = distanceApart * distanceApart;
 		float cellSize = distanceApart * Sqrt1_2;
-		int gridWidth = (int)System.Math.Ceiling( width / cellSize );
-		int gridHeight = (int)System.Math.Ceiling( height / cellSize );
+		int gridWidth = (int)Math.Ceiling( width / cellSize );
+		int gridHeight = (int)Math.Ceiling( height / cellSize );
 		int right = width - 1;
 		int bottom = height - 1;
-		float[] grid = new float[gridWidth * gridHeight * 2];
-		Array.Fill( grid, -1 );
-		List<int> candidates = [];
-		float rotx = (float)System.Math.Cos( 2 * System.Math.PI * M / K );
-		float roty = (float)System.Math.Sin( 2 * System.Math.PI * M / K );
+		int gridLength = gridWidth * gridHeight * 2;
 
-		float startX = ( ( width / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
-		float startY = ( ( height / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
+		int estimatedCapacity = ( width * height / radius2 ) + 16;
+		List<Point> result = new( estimatedCapacity );
 
-		result.Add(
-			Sample(
-				startX,
-				startY,
-				gridWidth,
-				cellSize,
-				grid,
-				candidates
-			)
-		);
+		float[] grid = ArrayPool<float>.Shared.Rent( gridLength );
+		int[] candidates = ArrayPool<int>.Shared.Rent( estimatedCapacity );
+		try {
+			Array.Fill( grid, -1, 0, gridLength );
+			int candidateCount = 0;
 
-		while( candidates.Count > 0 ) {
-			int i = _random.NextInt( candidates.Count );
-			int parent = candidates[i];
-			float t = TanPi2( ( 2.0F * _random.NextFloat() ) - 1.0F );
-			float q = 1.0F / ( 1.0F + ( t * t ) );  // arctan(t) ?
+			float rotx = (float)Math.Cos( 2 * Math.PI * M / K );
+			float roty = (float)Math.Sin( 2 * Math.PI * M / K );
 
-			float dx = q != 0 ? ( 1.0F - ( t * t ) ) * q : -1;
-			float dy = q != 0 ? 2.0F * t * q : 0;
+			float startX = ( ( width / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
+			float startY = ( ( height / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
 
-			bool added = false;
-			for( int j = 0; j < K; j++ ) {
-				float dw = ( dx * rotx ) - ( dy * roty );
-				dy = ( dx * roty ) + ( dy * rotx );
-				dx = dw;
-				float r = distanceApart * ( 1.0F + Epsilon +  (0.65F * _random.NextFloat()  * _random.NextFloat()) );
-				float x = ( grid[parent + 0] + ( r * dx ) );
-				float y = ( grid[parent + 1] + ( r * dy ) );
+			result.Add(
+				Sample(
+					startX,
+					startY,
+					gridWidth,
+					cellSize,
+					grid,
+					ref candidates,
+					ref candidateCount
+				)
+			);
 
-				if( 0 <= x
-					&& x < width
-					&& 0 <= y
-					&& y < height
-					&& Far( x, y, radius2, cellSize, gridWidth, gridHeight, grid )
-				) {
-					Point p = Sample(
-							x,
-							y,
-							gridWidth,
-							cellSize,
-							grid,
-							candidates
-						);
-					if( clipToBounds ) {
-						if( p.X > 0
-							&& p.X < right
-							&& p.Y > 0
-							&& p.Y < bottom
-						) {
+			while( candidateCount > 0 ) {
+				int i = _random.NextInt( candidateCount );
+				int parent = candidates[i];
+				float t = TanPi2( ( 2.0F * _random.NextFloat() ) - 1.0F );
+				float q = 1.0F / ( 1.0F + ( t * t ) );  // arctan(t) ?
+
+				float dx = q != 0 ? ( 1.0F - ( t * t ) ) * q : -1;
+				float dy = q != 0 ? 2.0F * t * q : 0;
+
+				bool added = false;
+				for( int j = 0; j < K; j++ ) {
+					float dw = ( dx * rotx ) - ( dy * roty );
+					dy = ( dx * roty ) + ( dy * rotx );
+					dx = dw;
+					float r = distanceApart * ( 1.0F + Epsilon + ( 0.65F * _random.NextFloat() * _random.NextFloat() ) );
+					float x = ( grid[parent + 0] + ( r * dx ) );
+					float y = ( grid[parent + 1] + ( r * dy ) );
+
+					if( 0 <= x
+						&& x < width
+						&& 0 <= y
+						&& y < height
+						&& Far( x, y, radius2, cellSize, gridWidth, gridHeight, grid )
+					) {
+						Point p = Sample(
+								x,
+								y,
+								gridWidth,
+								cellSize,
+								grid,
+								ref candidates,
+								ref candidateCount
+							);
+						if( clipToBounds ) {
+							if( p.X > 0
+								&& p.X < right
+								&& p.Y > 0
+								&& p.Y < bottom
+							) {
+								result.Add( p );
+								added = true;
+								break;
+							}
+						} else {
 							result.Add( p );
 							added = true;
 							break;
 						}
-					} else {
-						result.Add( p );
-						added = true;
-						break;
+					}
+				}
+				if( !added ) {
+					int index = candidateCount - 1;
+					int pr = candidates[index];
+					candidateCount--;
+					if( i < candidateCount ) {
+						candidates[i] = pr;
 					}
 				}
 			}
-			if( !added ) {
-				int index = candidates.Count - 1;
-				int pr = candidates[index];
-				candidates.RemoveAt( index );
-				if( i < candidates.Count ) {
-					candidates[i] = pr;
-				}
-			}
+
+			return result;
+		} finally {
+			ArrayPool<float>.Shared.Return( grid );
+			ArrayPool<int>.Shared.Return( candidates );
 		}
-
-		return result;
 	}
-
 
 	private static bool Far(
 		float x,
@@ -167,10 +179,10 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 	) {
 		int di = (int)( x / cellSize );
 		int dj = (int)( y / cellSize );
-		int i0 = System.Math.Max( di - 2, 0 );
-		int j0 = System.Math.Max( dj - 2, 0 );
-		int i1 = System.Math.Min( di + 3, gridWidth );
-		int j1 = System.Math.Min( dj + 3, gridHeight );
+		int i0 = Math.Max( di - 2, 0 );
+		int j0 = Math.Max( dj - 2, 0 );
+		int i1 = Math.Min( di + 3, gridWidth );
+		int j1 = Math.Min( dj + 3, gridHeight );
 		for( int j = j0; j < j1; j++ ) {
 			int o = j * gridWidth;
 			for( int i = i0; i < i1; i++ ) {
@@ -201,15 +213,22 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		int gridWidth,
 		float cellSize,
 		float[] grid,
-		List<int> candidates
+		ref int[] candidates,
+		ref int candidateCount
 	) {
 		Point s = new Point( (int)x, (int)y );
 		int index = ( ( gridWidth * (int)( y / cellSize ) ) + (int)( x / cellSize ) ) * 2;
 		grid[index + 0] = x;
 		grid[index + 1] = y;
 
-		candidates.Add( index );
-		return s;
+		if( candidateCount == candidates.Length ) {
+			int[] newCandidates = ArrayPool<int>.Shared.Rent( candidates.Length * 2 );
+			Array.Copy( candidates, newCandidates, candidateCount );
+			ArrayPool<int>.Shared.Return( candidates );
+			candidates = newCandidates;
+		}
 
+		candidates[candidateCount++] = index;
+		return s;
 	}
 }

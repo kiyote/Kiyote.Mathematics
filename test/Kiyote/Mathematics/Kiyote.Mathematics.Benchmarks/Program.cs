@@ -3,6 +3,7 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 using Kiyote.Mathematics.Noises.Benchmarks;
+using Kiyote.Mathematics.Pathfinding.Benchmarks;
 using Kiyote.Mathematics.Randomization.Benchmarks;
 
 ManualConfig config = DefaultConfig.Instance
@@ -17,7 +18,8 @@ BenchmarkSwitcher
 		typeof( FastPoissonDiscPointFactoryBenchmarks ),
 		typeof( FastRandomBenchmarks ),
 		typeof( FastRandomVsSystemBenchmarks ),
-		typeof( MidpointDisplacementNoisyEdgeFactoryBenchmarks )
+		typeof( MidpointDisplacementNoisyEdgeFactoryBenchmarks ),
+		typeof( AStarPathfinderBenchmarks ),
 	] )
 	.RunAll( config, args );
 

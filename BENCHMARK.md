@@ -11,11 +11,11 @@ LaunchCount=1  WarmupCount=10
 ```
 
 ## FastPoissonDiscPointFactory
-| Method         | Mean        | Error     | StdDev    | Allocated  |
-|--------------- |------------:|----------:|----------:|-----------:|
-| Fill_100x100   |    146.6 us |   1.51 us |   1.41 us |   19.92 KB |
-| Fill_500x500   |  3,818.4 us |  46.46 us |  43.46 us |  358.38 KB |
-| Fill_1000x1000 | 15,292.9 us | 186.83 us | 174.76 us | 1411.86 KB |
+| Method         | Mean        | Error     | StdDev    | Allocated |
+|--------------- |------------:|----------:|----------:|----------:|
+| Fill_100x100   |    148.9 us |   3.16 us |   2.96 us |   4.93 KB |
+| Fill_500x500   |  3,958.4 us |  68.09 us |  63.70 us | 117.57 KB |
+| Fill_1000x1000 | 15,608.4 us | 130.05 us | 115.29 us | 469.55 KB |
 
 # FastRandom
 | Method                                    | Mean      | Error     | StdDev    | Allocated |
@@ -46,8 +46,14 @@ LaunchCount=1  WarmupCount=10
 | SystemRandom_NextInt    |  2.482 ns | 0.0758 ns | 0.0709 ns |  1.00 |    0.04 |         - |          NA |
 
 # MidpointDisplacementNoisyEdgeFactory
-
 | Method                     | Mean       | Error    | StdDev   | Allocated |
 |--------------------------- |-----------:|---------:|---------:|----------:|
 | Create_Amplitude05_Levels3 |   494.3 ns | 10.59 ns |  9.91 ns |     912 B |
 | Create_Amplitude05_Levels4 | 1,020.3 ns | 18.96 ns | 17.74 ns |    1680 B |
+
+
+# AStarPathfinder
+| Method                       | Mean     | Error    | StdDev   | Allocated |
+|----------------------------- |---------:|---------:|---------:|----------:|
+| AStarPathfinder_TryFindPath  | 367.6 us | 16.02 us | 14.98 us |    3288 B |
+| AStarPathfinder_TryVisitPath | 362.5 us | 22.85 us | 20.26 us |       2 B |
