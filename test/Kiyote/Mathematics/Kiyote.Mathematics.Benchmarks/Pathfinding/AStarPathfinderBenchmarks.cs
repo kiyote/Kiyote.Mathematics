@@ -31,7 +31,7 @@ public class AStarPathfinderBenchmarks {
 			Size - 1,
 			_isPassable,
 			_cost,
-			out IReadOnlyList<PathStep<char>> _
+			out IReadOnlyList<GridCell<char>> _
 		);
 	}
 

@@ -44,7 +44,7 @@ internal sealed class AStarPathfinderTests {
 			0,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.False );
@@ -63,7 +63,7 @@ internal sealed class AStarPathfinderTests {
 			0,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.False );
@@ -82,7 +82,7 @@ internal sealed class AStarPathfinderTests {
 			0,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.False );
@@ -101,7 +101,7 @@ internal sealed class AStarPathfinderTests {
 			0,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.False );
@@ -120,11 +120,11 @@ internal sealed class AStarPathfinderTests {
 			0,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.True );
-		Assert.That( path, Is.EqualTo( [new PathStep<char>( 1, 0, '.' )] ) );
+		Assert.That( path, Is.EqualTo( [new GridCell<char>( 1, 0, '.' )] ) );
 	}
 
 	[Test]
@@ -139,7 +139,7 @@ internal sealed class AStarPathfinderTests {
 			0,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.True );
@@ -147,11 +147,11 @@ internal sealed class AStarPathfinderTests {
 			path,
 			Is.EqualTo(
 				[
-					new PathStep<char>( 0, 0, '.' ),
-					new PathStep<char>( 1, 0, '.' ),
-					new PathStep<char>( 2, 0, '.' ),
-					new PathStep<char>( 3, 0, '.' ),
-					new PathStep<char>( 4, 0, '.' ),
+					new GridCell<char>( 0, 0, '.' ),
+					new GridCell<char>( 1, 0, '.' ),
+					new GridCell<char>( 2, 0, '.' ),
+					new GridCell<char>( 3, 0, '.' ),
+					new GridCell<char>( 4, 0, '.' ),
 				]
 			)
 		);
@@ -172,7 +172,7 @@ internal sealed class AStarPathfinderTests {
 			1,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.True );
@@ -180,8 +180,8 @@ internal sealed class AStarPathfinderTests {
 			path,
 			Is.EqualTo(
 				[
-					new PathStep<char>( 0, 0, '.' ),
-					new PathStep<char>( 1, 1, '.' ),
+					new GridCell<char>( 0, 0, '.' ),
+					new GridCell<char>( 1, 1, '.' ),
 				]
 			)
 		);
@@ -202,7 +202,7 @@ internal sealed class AStarPathfinderTests {
 			1,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.True );
@@ -210,8 +210,8 @@ internal sealed class AStarPathfinderTests {
 			path,
 			Is.EqualTo(
 				[
-					new PathStep<char>( 0, 0, '.' ),
-					new PathStep<char>( 1, 1, '.' ),
+					new GridCell<char>( 0, 0, '.' ),
+					new GridCell<char>( 1, 1, '.' ),
 				]
 			)
 		);
@@ -232,7 +232,7 @@ internal sealed class AStarPathfinderTests {
 			1,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.False );
@@ -255,7 +255,7 @@ internal sealed class AStarPathfinderTests {
 			0,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.False );
@@ -278,11 +278,11 @@ internal sealed class AStarPathfinderTests {
 			2,
 			default,
 			default,
-			out IReadOnlyList<PathStep<char>> path
+			out IReadOnlyList<GridCell<char>> path
 		);
 
 		Assert.That( result, Is.True );
-		Assert.That( path, Has.None.Matches<PathStep<char>>( step => step.Cell == 'S' ) );
+		Assert.That( path, Has.None.Matches<GridCell<char>>( step => step.Cell == 'S' ) );
 	}
 
 	[Test]
@@ -307,7 +307,7 @@ internal sealed class AStarPathfinderTests {
 	[Test]
 	public void TryVisitPath_ValidPath_VisitsEachStepInOrder() {
 		IGrid<char> grid = TestGrid<char>.FromRows( "..." );
-		List<PathStep<char>> visited = [];
+		List<GridCell<char>> visited = [];
 
 		bool result = _pathfinder.TryVisitPath<char, NotWallPassabilityStrategy, UniformCostStrategy>(
 			grid,
@@ -328,9 +328,9 @@ internal sealed class AStarPathfinderTests {
 			visited,
 			Is.EqualTo(
 				[
-					new PathStep<char>( 0, 0, '.' ),
-					new PathStep<char>( 1, 0, '.' ),
-					new PathStep<char>( 2, 0, '.' ),
+					new GridCell<char>( 0, 0, '.' ),
+					new GridCell<char>( 1, 0, '.' ),
+					new GridCell<char>( 2, 0, '.' ),
 				]
 			)
 		);
@@ -343,7 +343,7 @@ internal sealed class AStarPathfinderTests {
 			".#.",
 			".#."
 		);
-		List<PathStep<char>> visited = [];
+		List<GridCell<char>> visited = [];
 
 		bool result = _pathfinder.TryVisitPath<char, NotWallPassabilityStrategy, UniformCostStrategy>(
 			grid,

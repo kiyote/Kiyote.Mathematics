@@ -29,7 +29,7 @@ internal sealed class AStarPathfinder : IPathfinder {
 		int endRow,
 		TPassability isPassable,
 		TCost cost,
-		out IReadOnlyList<PathStep<T>> path
+		out IReadOnlyList<GridCell<T>> path
 	) where T : default {
 		return DoTryFindPath(
 			_logger,
@@ -52,7 +52,7 @@ internal sealed class AStarPathfinder : IPathfinder {
 		int endRow,
 		TPassability isPassable,
 		TCost cost,
-		Func<PathStep<T>, bool> visitor
+		Func<GridCell<T>, bool> visitor
 	) where T : default {
 		return DoTryVisitPath(
 			_logger,
@@ -76,10 +76,10 @@ internal sealed class AStarPathfinder : IPathfinder {
 		int endRow,
 		TPassability isPassable,
 		TCost cost,
-		out IReadOnlyList<PathStep<T>> path
+		out IReadOnlyList<GridCell<T>> path
 	)
-		where TPassability : IPassabilityStrategy<T>
-		where TCost : ICostStrategy<T>
+		where TPassability : ICellStrategy<T, bool>
+		where TCost : ICellsStrategy<T, double>
 	{
 		ArgumentNullException.ThrowIfNull( grid );
 		ArgumentNullException.ThrowIfNull( isPassable );
@@ -92,11 +92,11 @@ internal sealed class AStarPathfinder : IPathfinder {
 		}
 
 		if( start == end ) {
-			path = [new PathStep<T>( start.Column, start.Row, grid[start.Column, start.Row] )];
+			path = [new GridCell<T>( start.Column, start.Row, grid[start.Column, start.Row] )];
 			return true;
 		}
 
-		bool found = RunSearch<T, TPassability, TCost, object?, IReadOnlyList<PathStep<T>>>(
+		bool found = RunSearch<T, TPassability, TCost, object?, IReadOnlyList<GridCell<T>>>(
 			grid,
 			start,
 			end,
@@ -104,7 +104,7 @@ internal sealed class AStarPathfinder : IPathfinder {
 			cost,
 			null,
 			static ( g, cameFrom, width, s, e, _ ) => BuildPath( g, cameFrom, width, s, e ),
-			out IReadOnlyList<PathStep<T>> result
+			out IReadOnlyList<GridCell<T>> result
 		);
 
 		if( found ) {
@@ -123,10 +123,10 @@ internal sealed class AStarPathfinder : IPathfinder {
 		int endRow,
 		TPassability isPassable,
 		TCost cost,
-		Func<PathStep<T>, bool> visitor
+		Func<GridCell<T>, bool> visitor
 	)
-		where TPassability : IPassabilityStrategy<T>
-		where TCost : ICostStrategy<T>
+		where TPassability : ICellStrategy<T, bool>
+		where TCost : ICellsStrategy<T, double>
 	{
 		ArgumentNullException.ThrowIfNull( grid );
 		ArgumentNullException.ThrowIfNull( isPassable );
@@ -138,11 +138,11 @@ internal sealed class AStarPathfinder : IPathfinder {
 		}
 
 		if( start == end ) {
-			visitor( new PathStep<T>( start.Column, start.Row, grid[start.Column, start.Row] ) );
+			visitor( new GridCell<T>( start.Column, start.Row, grid[start.Column, start.Row] ) );
 			return true;
 		}
 
-		return RunSearch<T, TPassability, TCost, Func<PathStep<T>, bool>, bool>(
+		return RunSearch<T, TPassability, TCost, Func<GridCell<T>, bool>, bool>(
 			grid,
 			start,
 			end,
@@ -168,7 +168,7 @@ internal sealed class AStarPathfinder : IPathfinder {
 		out (int Column, int Row) start,
 		out (int Column, int Row) end
 	)
-		where TPassability : IPassabilityStrategy<T>
+		where TPassability : ICellStrategy<T, bool>
 	{
 		start = default;
 		end = default;
@@ -178,8 +178,8 @@ internal sealed class AStarPathfinder : IPathfinder {
 			return false;
 		}
 
-		if( !isPassable.IsPassable( new PathStep<T>( startColumn, startRow, grid[startColumn, startRow] ) )
-			|| !isPassable.IsPassable( new PathStep<T>( endColumn, endRow, grid[endColumn, endRow] ) )
+		if( !isPassable.Evaluate( new GridCell<T>( startColumn, startRow, grid[startColumn, startRow] ) )
+			|| !isPassable.Evaluate( new GridCell<T>( endColumn, endRow, grid[endColumn, endRow] ) )
 		) {
 			logger.NotPassable();
 			return false;
@@ -200,8 +200,8 @@ internal sealed class AStarPathfinder : IPathfinder {
 		Func<IGrid<T>, int[], int, (int Column, int Row), (int Column, int Row), TState, TResult> onFound,
 		out TResult result
 	)
-		where TPassability : IPassabilityStrategy<T>
-		where TCost : ICostStrategy<T>
+		where TPassability : ICellStrategy<T, bool>
+		where TCost : ICellsStrategy<T, double>
 	{
 		result = default!;
 
@@ -237,8 +237,8 @@ internal sealed class AStarPathfinder : IPathfinder {
 					}
 
 					T? neighbourCell = grid[neighbour.Column, neighbour.Row];
-					PathStep<T> neighbourStep = new( neighbour.Column, neighbour.Row, neighbourCell );
-					if( !isPassable.IsPassable( neighbourStep ) ) {
+					GridCell<T> neighbourStep = new( neighbour.Column, neighbour.Row, neighbourCell );
+					if( !isPassable.Evaluate( neighbourStep ) ) {
 						continue;
 					}
 
@@ -249,8 +249,8 @@ internal sealed class AStarPathfinder : IPathfinder {
 						continue;
 					}
 
-					PathStep<T> currentStep = new( current.Column, current.Row, grid[current.Column, current.Row] );
-					double candidateCost = currentCost + cost.GetCost( currentStep, neighbourStep );
+					GridCell<T> currentStep = new( current.Column, current.Row, grid[current.Column, current.Row] );
+					double candidateCost = currentCost + cost.Evaluate( currentStep, neighbourStep );
 					int neighbourIndex = Index( neighbour, width );
 					if( bestCost[neighbourIndex] <= candidateCost ) {
 						continue;
@@ -376,13 +376,13 @@ internal sealed class AStarPathfinder : IPathfinder {
 		int columnOffset,
 		int rowOffset
 	)
-		where TPassability : IPassabilityStrategy<T>
+		where TPassability : ICellStrategy<T, bool>
 	{
 		bool horizontalOpen = IsInBounds( grid, current.Column + columnOffset, current.Row )
-			&& isPassable.IsPassable( new PathStep<T>( current.Column + columnOffset, current.Row, grid[current.Column + columnOffset, current.Row] ) );
+			&& isPassable.Evaluate( new GridCell<T>( current.Column + columnOffset, current.Row, grid[current.Column + columnOffset, current.Row] ) );
 
 		bool verticalOpen = IsInBounds( grid, current.Column, current.Row + rowOffset )
-			&& isPassable.IsPassable( new PathStep<T>( current.Column, current.Row + rowOffset, grid[current.Column, current.Row + rowOffset] ) );
+			&& isPassable.Evaluate( new GridCell<T>( current.Column, current.Row + rowOffset, grid[current.Column, current.Row + rowOffset] ) );
 
 		return horizontalOpen || verticalOpen;
 	}
@@ -394,22 +394,22 @@ internal sealed class AStarPathfinder : IPathfinder {
 		return Math.Max( Math.Abs( a.Column - b.Column ), Math.Abs( a.Row - b.Row ) );
 	}
 
-	private static IReadOnlyList<PathStep<T>> BuildPath<T>(
+	private static IReadOnlyList<GridCell<T>> BuildPath<T>(
 		IGrid<T> grid,
 		int[] cameFrom,
 		int width,
 		(int Column, int Row) start,
 		(int Column, int Row) end
 	) {
-		List<PathStep<T>> steps = [
-			new PathStep<T>( end.Column, end.Row, grid[end.Column, end.Row] )
+		List<GridCell<T>> steps = [
+			new GridCell<T>( end.Column, end.Row, grid[end.Column, end.Row] )
 		];
 
 		(int Column, int Row) current = end;
 		while( current != start ) {
 			int parentIndex = cameFrom[Index( current, width )];
 			current = (parentIndex % width, parentIndex / width);
-			steps.Add( new PathStep<T>( current.Column, current.Row, grid[current.Column, current.Row] ) );
+			steps.Add( new GridCell<T>( current.Column, current.Row, grid[current.Column, current.Row] ) );
 		}
 
 		steps.Reverse();
@@ -422,7 +422,7 @@ internal sealed class AStarPathfinder : IPathfinder {
 		int width,
 		(int Column, int Row) start,
 		(int Column, int Row) end,
-		Func<PathStep<T>, bool> visitor
+		Func<GridCell<T>, bool> visitor
 	) {
 		int length = 1;
 		(int Column, int Row) current = end;
@@ -432,11 +432,11 @@ internal sealed class AStarPathfinder : IPathfinder {
 			length++;
 		}
 
-		PathStep<T>[] steps = ArrayPool<PathStep<T>>.Shared.Rent( length );
+		GridCell<T>[] steps = ArrayPool<GridCell<T>>.Shared.Rent( length );
 		try {
 			current = end;
 			for( int i = length - 1; i >= 0; i-- ) {
-				steps[i] = new PathStep<T>( current.Column, current.Row, grid[current.Column, current.Row] );
+				steps[i] = new GridCell<T>( current.Column, current.Row, grid[current.Column, current.Row] );
 				if( i > 0 ) {
 					int parentIndex = cameFrom[Index( current, width )];
 					current = (parentIndex % width, parentIndex / width);
@@ -449,7 +449,7 @@ internal sealed class AStarPathfinder : IPathfinder {
 				}
 			}
 		} finally {
-			ArrayPool<PathStep<T>>.Shared.Return( steps, RuntimeHelpers.IsReferenceOrContainsReferences<PathStep<T>>() );
+			ArrayPool<GridCell<T>>.Shared.Return( steps, RuntimeHelpers.IsReferenceOrContainsReferences<GridCell<T>>() );
 		}
 	}
 }

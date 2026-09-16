@@ -12,10 +12,10 @@ public interface IPathfinder {
 		int endRow,
 		TPassability isPassable,
 		TCost cost,
-		out IReadOnlyList<PathStep<T>> path
+		out IReadOnlyList<GridCell<T>> path
 	)
-		where TPassability : IPassabilityStrategy<T>
-		where TCost : ICostStrategy<T>;
+		where TPassability : ICellStrategy<T, bool>
+		where TCost : ICellsStrategy<T, double>;
 
 	bool TryVisitPath<T, TPassability, TCost>(
 		IGrid<T> grid,
@@ -25,9 +25,9 @@ public interface IPathfinder {
 		int endRow,
 		TPassability isPassable,
 		TCost cost,
-		Func<PathStep<T>, bool> visitor
+		Func<GridCell<T>, bool> visitor
 	)
-		where TPassability : IPassabilityStrategy<T>
-		where TCost : ICostStrategy<T>;
+		where TPassability : ICellStrategy<T, bool>
+		where TCost : ICellsStrategy<T, double>;
 
 }

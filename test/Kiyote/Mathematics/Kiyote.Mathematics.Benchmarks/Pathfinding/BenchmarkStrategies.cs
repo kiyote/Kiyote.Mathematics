@@ -1,16 +1,18 @@
+using Kiyote.Geometry.Grids;
+
 namespace Kiyote.Mathematics.Pathfinding.Benchmarks;
 
-internal readonly struct NotWallPassabilityStrategy : IPassabilityStrategy<char> {
+internal readonly struct NotWallPassabilityStrategy : ICellStrategy<char, bool> {
 
-	public bool IsPassable( PathStep<char> pathStep ) {
+	public bool Evaluate( GridCell<char> pathStep ) {
 		return pathStep.Cell != '#';
 	}
 
 }
 
-internal readonly struct UniformCostStrategy : ICostStrategy<char> {
+internal readonly struct UniformCostStrategy : ICellsStrategy<char, double> {
 
-	public double GetCost( PathStep<char> source, PathStep<char> destination ) {
+	public double Evaluate( GridCell<char> source, GridCell<char> destination ) {
 		return 1.0;
 	}
 

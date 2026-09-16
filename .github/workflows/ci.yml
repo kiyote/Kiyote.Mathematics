@@ -7,7 +7,7 @@ on:
     - '.github/workflows/ci.yml'
     - 'src/**'
     - 'test/**'
-    - 'Kiyote.Geometry.sln'
+    - 'Kiyote.Mathematics.sln'
     - 'Directory.Packages.props'
     - 'Directory.Build.props'
     - 'nuget.config'
@@ -59,7 +59,9 @@ jobs:
 
       - name: Create Orphan Branch
         shell: bash
-        run: ${{ github.workspace }}/create-orphan-branch.sh badges ${{ github.ref_name }}
+        run: |
+          chmod a+x ${{ github.workspace }}/create-orphan-branch.sh
+          ${{ github.workspace }}/create-orphan-branch.sh badges ${{ github.ref_name }}
 
       - name: Make Coverage Badge      
         uses: action-badges/cobertura-coverage-xml-badges@0.5.0
